@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Threading.Tasks;
 using Windows.Devices.Gpio;
 using Windows.UI.Xaml;
@@ -7,10 +8,10 @@ namespace SmartSprinklerController.Models
 {
     public sealed class SprinklerZone
     {
-        public string Number { get; set; }
+        public int Number { get; set; }
         public GpioPin Pin { get; set; }
 
-        public SprinklerZone(string zoneNumber, int pinNumber)
+        public SprinklerZone(int zoneNumber, int pinNumber)
         {
             Number = zoneNumber;
             Pin = Utilities.ConfigureGpioPin(pinNumber, GpioPinDriveMode.Output);
