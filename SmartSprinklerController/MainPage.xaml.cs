@@ -1,27 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Background;
 using Windows.Devices.Gpio;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 using Autofac;
+using Services;
+using Services.OpenWeatherService;
 using SmartSprinklerController.Models;
 using SmartSprinklerController.Services;
-using SmartSprinklerController.Services.OpenWeatherService;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -91,13 +81,13 @@ namespace SmartSprinklerController
             dispatcherTimer.Interval = TimeSpan.FromMilliseconds(50);
         }
 
-        private async Task<IWeatherResponse> GetWeatherAsync()
+        private async Task<ICurrentWeatherResponse> GetWeatherAsync()
         {
             using (var scope = Container.BeginLifetimeScope())
             {
                 var weatherService = scope.Resolve<IWeatherService>();
 
-                var weatherResponse = await weatherService.GetWeatherAsync();
+                var weatherResponse = await weatherService.GetWeatherNowAsync();
                 return weatherResponse;
             }
         }

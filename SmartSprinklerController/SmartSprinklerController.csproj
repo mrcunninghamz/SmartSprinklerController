@@ -125,10 +125,6 @@
     <Compile Include="Models\Schedule.cs" />
     <Compile Include="Models\SprinklerZone.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\IWeatherResponse.cs" />
-    <Compile Include="Services\IWeatherService.cs" />
-    <Compile Include="Services\OpenWeatherService\OpenWeatherResponse.cs" />
-    <Compile Include="Services\OpenWeatherService\OpenWeatherService.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +162,12 @@
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.3</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Services\Services.csproj">
+      <Project>{3a7dbbcf-23bb-46da-b85d-148c35bc2f64}</Project>
+      <Name>Services</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
