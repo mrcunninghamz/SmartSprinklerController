@@ -6,17 +6,21 @@ namespace SmartSprinklerController.Models
 {
     public sealed class SprinklerZone
     {
-        public int Number { get; set; }
+        public int Number { get; }
 
-        public int Duration { get; set; }
-        private GpioPin Pin { get; set; }
+        public int Duration { get; private set; }
+        private GpioPin Pin { get; }
 
-        public SprinklerZone(int zoneNumber, int duration, int pinNumber)
+        public SprinklerZone(int zoneNumber, int pinNumber)
         {
             Number = zoneNumber;
-            Duration = duration;
             Pin = Utilities.ConfigureGpioPin(pinNumber, GpioPinDriveMode.Output);
             Pin.Write(GpioPinValue.Low);
+        }
+
+        public void SetDuration(int seconds)
+        {
+            Duration = seconds;
         }
 
         public void RunZone()

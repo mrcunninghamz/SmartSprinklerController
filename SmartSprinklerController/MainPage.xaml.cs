@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Gpio;
@@ -12,6 +13,7 @@ using Services;
 using Services.OpenWeatherService;
 using SmartSprinklerController.Models;
 using SmartSprinklerController.Services;
+using SmartSprinklerController.Services.Configurator;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -32,11 +34,11 @@ namespace SmartSprinklerController
         {
             runningPin = Utilities.ConfigureGpioPin(18, GpioPinDriveMode.Output);
             runningPin.Write(GpioPinValue.Low);
-            zones = GetZones();
-
+            
             this.SetupDependencies();
             this.InitializeComponent();
 
+            this.ConfigureZones();
             this.ConfigureTimer();
 
             InitializeDailyScheduler();
@@ -151,18 +153,34 @@ namespace SmartSprinklerController
 
             //Initialize dependencies
             builder.RegisterType<OpenWeatherService>().As<IWeatherService>();
+            builder.RegisterType<ConfiguratorService>().As<IConfiguratorService>();
 
             Container = builder.Build();
         }
 
-        private ICollection<SprinklerZone> GetZones()
+        private async void ConfigureZones()
         {
-            //TODO call service for zone information
-            return new List<SprinklerZone>
+            var sprinklerZones = new List<SprinklerZone>
             {
-                new SprinklerZone(1, 5, 17),
-                new SprinklerZone(2, 5, 19)
+                new SprinklerZone(1, 17),
+                new SprinklerZone(2, 19)
             };
+
+            using (var scope = Container.BeginLifetimeScope())
+            {
+                var service = scope.Resolve<IConfiguratorService>();
+
+                var zoneConfigurations = await service.GetZonesAsync();
+
+                foreach (var zoneConfiguration in zoneConfigurations)
+                {
+                    var sprinklerZone = sprinklerZones.FirstOrDefault(x => x.Number == zoneConfiguration.Number);
+
+                    sprinklerZone?.SetDuration(zoneConfiguration.Duration);
+                }
+            }
+
+            zones = sprinklerZones;
         }
 
         private void GetSchedule()
