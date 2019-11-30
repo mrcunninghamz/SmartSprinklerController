@@ -35,11 +35,11 @@ namespace SmartSprinklerController
             runningPin = Utilities.ConfigureGpioPin(18, GpioPinDriveMode.Output);
             runningPin.Write(GpioPinValue.Low);
             
-            this.SetupDependencies();
-            this.InitializeComponent();
+            SetupDependencies();
+            InitializeComponent();
 
-            this.ConfigureZones();
-            this.ConfigureTimer();
+            ConfigureZones();
+            ConfigureTimer();
 
             InitializeDailyScheduler();
         }
@@ -50,30 +50,28 @@ namespace SmartSprinklerController
             {
                 return;
             }
-            else
+
+            runningPin.Write(GpioPinValue.High);
+            UpdateTimer();
+            var callback = new TimerCallback(async arg =>
             {
-                runningPin.Write(GpioPinValue.High);
-                this.UpdateTimer();
-                var callback = new TimerCallback(async (arg) =>
+                Debug.WriteLine("Running schedule, checking weather... ");
+                var weather = await GetWeatherAsync();
+
+                Debug.WriteLine($"Weather: Will it rain? {weather.PossiblePrecipitation}, temperature: {weather.Temperature} *F");
+
+                if (!weather.PossiblePrecipitation)
                 {
-                    Debug.WriteLine("Running schedule, checking weather... ");
-                    var weather = await this.GetWeatherAsync();
+                    GetSchedule();
+                }
 
-                    Debug.WriteLine($"Weather: Will it rain? {weather.PossiblePrecipitation}, temperature: {weather.Temperature} *F");
-
-                    if (!weather.PossiblePrecipitation)
-                    {
-                        GetSchedule();
-                    }
-
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        runningPin.Write(GpioPinValue.Low);
-                        this.UpdateTimer();
-                    });
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    runningPin.Write(GpioPinValue.Low);
+                    UpdateTimer();
                 });
-                dailyScheduler = new Timer(callback, null, TimeSpan.FromMilliseconds(0), TimeSpan.FromDays(1));
-            }
+            });
+            dailyScheduler = new Timer(callback, null, TimeSpan.FromMilliseconds(0), TimeSpan.FromDays(1));
         }
 
         private void ConfigureTimer()
@@ -101,8 +99,8 @@ namespace SmartSprinklerController
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 runningPin.Write(GpioPinValue.High);
-                this.UpdateTimer();
-                this.dispatcherTimer.Interval = TimeSpan.FromMilliseconds(1000);
+                UpdateTimer();
+                dispatcherTimer.Interval = TimeSpan.FromMilliseconds(1000);
             });
 
             foreach (var sprinklerZone in zones)
@@ -114,7 +112,7 @@ namespace SmartSprinklerController
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 runningPin.Write(GpioPinValue.Low);
-                this.UpdateTimer();
+                UpdateTimer();
             });
         }
         private void UpdateTimer()
