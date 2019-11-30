@@ -10,9 +10,9 @@ namespace SmartSprinklerController.Models
         public TimeSpan Time { get; set; }
 
         /// <summary>
-        /// Zone duration dictionary <zonenumber, durration in seconds>
+        /// Zones to run
         /// </summary>
-        public Dictionary<int, int> ZoneDurations { get; set; }
+        public ICollection<int> Zones { get; set; } = new List<int>();
 
     }
 }

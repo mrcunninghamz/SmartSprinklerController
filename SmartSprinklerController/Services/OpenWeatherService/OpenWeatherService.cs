@@ -18,7 +18,7 @@ namespace SmartSprinklerController.Services.OpenWeatherService
                 JsonConvert.DeserializeObject<OpenWeatherResponse>(await response.Content.ReadAsStringAsync());
 
             var weatherToday =
-                weatherResponse.List.Where(x => Utilities.FromUnixTime(x.Dt).Date == DateTime.UtcNow.Date);
+                weatherResponse.List.Where(x => Convert.ToDateTime(x.DtTxt).Date == DateTime.UtcNow.Date);
 
             return new WeatherResponse
             {
