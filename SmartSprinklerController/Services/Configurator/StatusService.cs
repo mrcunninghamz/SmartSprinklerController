@@ -23,6 +23,7 @@ namespace SmartSprinklerController.Services.Configurator
 
         public async Task ReportStatus(Status status, string message)
         {
+            //TODO: use signalr
             var json = JsonConvert.SerializeObject(new {Status = status, Message = message});
             await _httpClient.PostAsync("status", new StringContent(json, Encoding.UTF8, "application/json"));
         }

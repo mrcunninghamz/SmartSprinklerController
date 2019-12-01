@@ -28,6 +28,7 @@ namespace SmartSprinklerController
         private GpioPin runningPin;
         private DispatcherTimer dispatcherTimer;
         private Timer dailyScheduler;
+        private Timer statusTimer;
         private ICollection<Timer> waterings = new List<Timer>();
         private ICollection<SprinklerZone> zones;
         private static IContainer Container { get; set; }
@@ -71,7 +72,7 @@ namespace SmartSprinklerController
                 }
                 else
                 {
-                    await ReportStatus(Status.Stopped, "Its Raining.");
+                    await ReportStatus(Status.Stopped, "Rain in forecast.");
                 }
 
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -106,7 +107,15 @@ namespace SmartSprinklerController
             using (var scope = Container.BeginLifetimeScope())
             {
                 var statusService = scope.Resolve<IStatusService>();
-                await statusService.ReportStatus(status, message);
+
+                statusTimer?.Dispose();
+
+                var callback = new TimerCallback(async arg =>
+                {
+                    await statusService.ReportStatus(status, message);
+                });
+
+                statusTimer = new Timer(callback, null, TimeSpan.FromMilliseconds(0), TimeSpan.FromSeconds(5));
             }
         }
 
