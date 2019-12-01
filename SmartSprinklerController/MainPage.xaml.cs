@@ -9,6 +9,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Autofac;
+using Core;
 using Services;
 using Services.OpenWeatherService;
 using SmartSprinklerController.Models;
@@ -44,18 +45,22 @@ namespace SmartSprinklerController
             InitializeDailyScheduler();
         }
 
-        private void InitializeDailyScheduler()
+        private async void InitializeDailyScheduler()
         {
             if (dailyScheduler != null)
             {
                 return;
             }
 
+            await ReportStatus(Status.Started, "Checking Schedule.");
+
             runningPin.Write(GpioPinValue.High);
             UpdateTimer();
             var callback = new TimerCallback(async arg =>
             {
                 Debug.WriteLine("Running schedule, checking weather... ");
+
+                await ReportStatus(Status.Started, "Checking Weather.");
                 var weather = await GetWeatherAsync();
 
                 Debug.WriteLine($"Weather: Will it rain? {weather.PossiblePrecipitation}, temperature: {weather.Temperature} *F");
@@ -63,6 +68,10 @@ namespace SmartSprinklerController
                 if (!weather.PossiblePrecipitation)
                 {
                     GetSchedule();
+                }
+                else
+                {
+                    await ReportStatus(Status.Stopped, "Its Raining.");
                 }
 
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -92,8 +101,18 @@ namespace SmartSprinklerController
             }
         }
 
+        private async Task ReportStatus(Status status, string message)
+        {
+            using (var scope = Container.BeginLifetimeScope())
+            {
+                var statusService = scope.Resolve<IStatusService>();
+                await statusService.ReportStatus(status, message);
+            }
+        }
+
         private async void RunSprinklers()
         {
+            await ReportStatus(Status.Running, "Running Sprinklers.");
             Debug.WriteLine($"Current Time: {DateTime.UtcNow.TimeOfDay}");
 
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -105,10 +124,12 @@ namespace SmartSprinklerController
 
             foreach (var sprinklerZone in zones)
             {
+                await ReportStatus(Status.Running, $"Running Sprinklers. Zone {sprinklerZone.Number}");
                 Debug.WriteLine($"Running zone {sprinklerZone.Number} for {sprinklerZone.Duration} seconds");
                 sprinklerZone.RunZone();
             }
 
+            await ReportStatus(Status.Stopped, "Finished Run.");
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 runningPin.Write(GpioPinValue.Low);
@@ -152,12 +173,15 @@ namespace SmartSprinklerController
             //Initialize dependencies
             builder.RegisterType<OpenWeatherService>().As<IWeatherService>();
             builder.RegisterType<ConfiguratorService>().As<IConfiguratorService>();
+            builder.RegisterType<StatusService>().As<IStatusService>();
 
             Container = builder.Build();
         }
 
         private async void ConfigureZones()
         {
+            await ReportStatus(Status.Started, "Configuring Zones.");
+
             var sprinklerZones = new List<SprinklerZone>
             {
                 new SprinklerZone(1, 17),
@@ -179,10 +203,14 @@ namespace SmartSprinklerController
             }
 
             zones = sprinklerZones;
+
+            await ReportStatus(Status.Started, "Finished Configuring Zones.");
         }
 
-        private void GetSchedule()
+        private async void GetSchedule()
         {
+            await ReportStatus(Status.GettingSchedule, "Its Raining.");
+
             //TODO call service for schedule for today
             var today = DateTime.UtcNow;
 

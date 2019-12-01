@@ -1,18 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Services.OpenWeatherService;
+using SmartSprinklerConfigurator.Hubs;
 using SmartSprinklerController.Services;
-using SmartSprinklerController.Services.OpenWeatherService;
 
 namespace SmartSprinklerConfigurator
 {
@@ -29,8 +24,10 @@ namespace SmartSprinklerConfigurator
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSignalR().AddJsonProtocol();
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
             services.AddTransient<IWeatherService, OpenWeatherService>();
         }
 
@@ -53,6 +50,7 @@ namespace SmartSprinklerConfigurator
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<SprinklerControllerStatusHub>("/hubs/status");
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
