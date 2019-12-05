@@ -193,8 +193,9 @@ namespace SmartSprinklerController
 
             var sprinklerZones = new List<SprinklerZone>
             {
-                new SprinklerZone(1, 17),
-                new SprinklerZone(2, 19)
+                new SprinklerZone(1, 20),
+                new SprinklerZone(2, 21),
+                new SprinklerZone(3, 26)
             };
 
             using (var scope = Container.BeginLifetimeScope())

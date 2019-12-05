@@ -66,5 +66,5 @@ Copy files from `PiStartup` directory to your pi C:\
 
 connect to pi and run
 ```
-schtasks /create /tn "Startup Web" /tr c:\Startup.bat /sc onstart /ru SYSTEM
+schtasks /create /tn "Startup Configurator" /tr c:\Startup.bat /sc onstart /ru SYSTEM
 ```
